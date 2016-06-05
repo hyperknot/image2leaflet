@@ -9,6 +9,8 @@ from .utils import delete_dir
 
 def process_image(input_file_path, subfolder=None):
     input_file_path = os.path.abspath(input_file_path)
+    if not os.path.isfile(input_file_path):
+        sys.exit('Input file does not exists')
 
     if not subfolder:
         basename = os.path.splitext(os.path.basename(input_file_path))[0]
@@ -21,12 +23,12 @@ def process_image(input_file_path, subfolder=None):
     mem_drv = gdal.GetDriverByName('MEM')
 
     if not out_drv or not mem_drv:
-        sys.exit('driver not found')
+        sys.exit('Driver not found')
 
     gd_orig = gdal.Open(input_file_path, gdal.GA_ReadOnly)
 
     if not gd_orig:
-        sys.exit('cannot open input file')
+        sys.exit('Cannot open input file')
 
     width = gd_orig.RasterXSize
     height = gd_orig.RasterYSize
