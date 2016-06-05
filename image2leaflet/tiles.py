@@ -1,27 +1,16 @@
-#!/usr/bin/env python
-
-import sys
 import os
 import math
-import shutil
 
 from osgeo import gdal
+from .utils import ensure_dir
 
-
-def ensure_dir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+tilesize = 256
 
 
 def gen_tile_path(subfolder, ext, x, y, zoom):
     output_folder_name = os.path.join(subfolder, str(zoom), str(x))
     output_file_path = os.path.join(output_folder_name, '{}.{}'.format(y, ext.lower()))
     return output_file_path, output_folder_name
-
-
-def delete_dir(directory):
-    if os.path.exists(directory):
-        shutil.rmtree(directory)
 
 
 def make_zoom_info(width, height):
@@ -137,50 +126,3 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
             # count += 1
             # print count, dst_tile_count_total
 
-
-def process_image(input_file_path, subfolder=None):
-    input_file_path = os.path.abspath(input_file_path)
-
-    if not subfolder:
-        basename = os.path.splitext(os.path.basename(input_file_path))[0]
-        subfolder = os.path.join(os.path.dirname(input_file_path), basename)
-
-    subfolder = os.path.abspath(subfolder)
-
-    gdal.AllRegister()
-    out_drv = gdal.GetDriverByName('PNG')
-    mem_drv = gdal.GetDriverByName('MEM')
-
-    if not out_drv or not mem_drv:
-        sys.exit('driver not found')
-
-    gd_orig = gdal.Open(input_file_path, gdal.GA_ReadOnly)
-
-    if not gd_orig:
-        sys.exit('cannot open input file')
-
-    width = gd_orig.RasterXSize
-    height = gd_orig.RasterYSize
-    tilebands = gd_orig.RasterCount
-
-    print('Input file: {}x{} pixels, {} bands'.format(width, height, tilebands))
-
-    zoom_info = make_zoom_info(width, height)
-
-    delete_dir(subfolder)
-
-    print('Generating zoom level: {}'.format(zoom_info[-1]['zoom']))
-    process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, mem_drv, out_drv)
-
-    for dst_level in range(len(zoom_info) - 2, 0, -1):
-        print('Generating zoom level: {}'.format(dst_level))
-        process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, out_drv)
-
-    print('Done')
-
-
-
-tilesize = 256
-input_file_path = 'P5167614.JPG'
-
-process_image(input_file_path)
