@@ -61,7 +61,7 @@ Which will create a tiled Leaflet map in `bigimage` subfolder.
    
 By default the output folder is relative to the image file. You can override it by specifying `-o` or `--output` for example:
 
-    image2leaflet bigimage.tif -o my-new-subfolder
+    image2leaflet bigimage.tif -o new-subfolder
     
 The exported format can be either in JPEG (default) or PNG. You can select it using `-f` or `--format` switch.
 
