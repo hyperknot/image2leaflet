@@ -2,9 +2,11 @@ import os
 import math
 
 from osgeo import gdal
-from .utils import ensure_dir
+from .utils import ensure_dir, get_path_by_list, run_cmd
 
 tilesize = 256
+mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg'])
+
 
 
 def gen_tile_path(subfolder, ext, x, y, zoom):
@@ -36,7 +38,7 @@ def make_zoom_info(width, height):
     return zoom_info
 
 
-def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, mem_drv, out_drv):
+def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, mem_drv, out_drv, ext):
     level = -1
     zoom = zoom_info[level]['zoom']
     tile_count_x = zoom_info[level]['tile_x'] + 1
@@ -54,7 +56,7 @@ def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, m
             rxsize = tilesize
 
         for y in range(tile_count_y):
-            output_file_name, output_folder_name = gen_tile_path(subfolder, 'png', x, y, zoom)
+            output_file_name, output_folder_name = gen_tile_path(subfolder, ext, x, y, zoom)
             ensure_dir(output_folder_name)
 
             # calculate ry, rysize
@@ -74,7 +76,7 @@ def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, m
             # print count, tile_count_total
 
 
-def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, out_drv):
+def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, out_drv, ext):
     dst_zoom = zoom_info[dst_level]['zoom']
     assert dst_zoom == dst_level
 
@@ -91,7 +93,7 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
 
     for dst_x in range(dst_tile_count_x):
         for dst_y in range(dst_tile_count_y):
-            output_file_name, output_folder_name = gen_tile_path(subfolder, 'png', dst_x, dst_y, dst_zoom)
+            output_file_name, output_folder_name = gen_tile_path(subfolder, ext, dst_x, dst_y, dst_zoom)
             ensure_dir(output_folder_name)
 
             dsquery = mem_drv.Create('', 2 * tilesize, 2 * tilesize, tilebands)
@@ -99,16 +101,16 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
 
             # read lower levels
             for plus_x in range(2):
-                src_x = dst_x + plus_x
+                src_x = 2 * dst_x + plus_x
                 if src_x >= src_tile_count_x:
                     continue
 
                 for plus_y in range(2):
-                    src_y = dst_y + plus_y
+                    src_y = 2 * dst_y + plus_y
                     if src_y >= src_tile_count_y:
                         continue
 
-                    src_file_path, _ = gen_tile_path(subfolder, 'png', src_x, src_y, src_zoom)
+                    src_file_path, _ = gen_tile_path(subfolder, ext, src_x, src_y, src_zoom)
 
                     dsquerytile = gdal.Open(src_file_path, gdal.GA_ReadOnly)
                     dsquery.WriteRaster(plus_x * tilesize, plus_y * tilesize, tilesize, tilesize,
@@ -121,8 +123,27 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
             assert res == 0
 
             out_drv.CreateCopy(output_file_name, dstile, strict=0)
-            os.remove(output_file_name + '.aux.xml')
+
+            if ext == 'png':
+                os.remove(output_file_name + '.aux.xml')
 
             # count += 1
             # print count, dst_tile_count_total
 
+
+def convert_jpgs(zoom_info, subfolder, out_drv_str, jpg_quality=70):
+    for level_data in zoom_info:
+        zoom = level_data['zoom']
+        for x in range(level_data['tile_x'] + 1):
+            for y in range(level_data['tile_y'] + 1):
+                bmp_file = gen_tile_path(subfolder, out_drv_str.lower(), x, y, zoom)[0]
+                jpg_file = gen_tile_path(subfolder, 'jpg', x, y, zoom)[0]
+
+                mozjpeg_cmd = u'{mozjpeg_path} -outfile "{dst}" -quality {jpg_quality} "{src}"'.format(
+                    mozjpeg_path=mozjpeg_path, dst=jpg_file, src=bmp_file, jpg_quality=jpg_quality)
+
+                _, e, rc = run_cmd(mozjpeg_cmd)
+                if rc != 0:
+                    raise ValueError(u'error with jpg compression step: {}'.format(e))
+
+                os.remove(bmp_file)
