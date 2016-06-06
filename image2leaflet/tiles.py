@@ -8,7 +8,7 @@ from .utils import ensure_dir, get_path_by_list, run_cmd
 tilesize = 256
 
 try:
-    mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg2'])
+    mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg'])
 except Exception:
     sys.exit('mozjpeg missing, please install mozjpeg')
 
