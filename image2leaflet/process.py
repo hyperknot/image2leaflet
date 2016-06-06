@@ -1,9 +1,10 @@
 import os
+import jinja2
 
 from osgeo import gdal
 
 from .tiles import make_zoom_info, process_max_level, process_lower_levels, convert_jpgs
-from .utils import delete_dir
+from .utils import delete_dir, read_file_contents, write_file_contents
 
 
 
@@ -12,8 +13,9 @@ def process_image(input_file_path, ext='jpg', subfolder=None):
     if not os.path.isfile(input_file_path):
         raise ValueError('Input file does not exists')
 
+    basename = os.path.splitext(os.path.basename(input_file_path))[0]
+
     if not subfolder:
-        basename = os.path.splitext(os.path.basename(input_file_path))[0]
         subfolder = os.path.join(os.path.dirname(input_file_path), basename)
 
     ext = ext.lower()
@@ -60,5 +62,25 @@ def process_image(input_file_path, ext='jpg', subfolder=None):
         print('Converting JPGs')
         convert_jpgs(zoom_info, subfolder, out_drv_str)
 
+    print('Generating index.html')
+    generate_index_html(width, height, ext, basename, subfolder)
+
     print('Done')
+
+
+def generate_index_html(width, height, ext, title, subfolder):
+    templates_folder = os.path.dirname(os.path.dirname(__file__))
+    template_path = os.path.join(templates_folder, 'templates', 'index.html')
+
+    template_str = read_file_contents(template_path)
+
+    template = jinja2.Template(template_str)
+    rendered_str = template.render(width=width, height=height, ext=ext, title=title)
+
+    rendered_path = os.path.join(subfolder, 'index.html')
+    write_file_contents(rendered_path, rendered_str)
+
+
+
+
 

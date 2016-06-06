@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import codecs
 
 
 def ensure_dir(directory):
@@ -44,3 +45,24 @@ def get_path_by_list(progname, path_list):
                 return item
 
         raise ValueError(u'Program not found by list: {}'.format(progname))
+
+
+
+def read_file_contents(path, encoding=True):
+    if os.path.exists(path):
+        if encoding:
+            with codecs.open(path, encoding='utf-8') as infile:
+                return infile.read().strip()
+        else:
+            with open(path) as infile:
+                return infile.read().strip()
+
+
+def write_file_contents(path, data, encoding=True):
+    if encoding:
+        with codecs.open(path, 'w', encoding='utf-8') as outfile:
+            outfile.write(data)
+    else:
+        with open(path, 'w') as outfile:
+            outfile.write(data)
+

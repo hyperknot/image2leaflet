@@ -4,6 +4,7 @@ from setuptools import setup
 
 requirements = [
     'click',
+    'jinja2',
 ]
 
 setup(
