@@ -8,7 +8,7 @@ from .utils import ensure_dir, get_path_by_list, run_cmd
 tilesize = 256
 
 try:
-    mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg'])
+    mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg', r'C:\Program Files (x86)\mozjpeg\cjpeg.exe'])
 except Exception:
     sys.exit('mozjpeg missing, please install mozjpeg')
 
@@ -143,7 +143,7 @@ def convert_jpgs(zoom_info, subfolder, out_drv_str, jpg_quality=70):
                 bmp_file = gen_tile_path(subfolder, out_drv_str.lower(), x, y, zoom)[0]
                 jpg_file = gen_tile_path(subfolder, 'jpg', x, y, zoom)[0]
 
-                mozjpeg_cmd = u'{mozjpeg_path} -outfile "{dst}" -quality {jpg_quality} "{src}"'.format(
+                mozjpeg_cmd = u'"{mozjpeg_path}" -outfile "{dst}" -quality {jpg_quality} "{src}"'.format(
                     mozjpeg_path=mozjpeg_path, dst=jpg_file, src=bmp_file, jpg_quality=jpg_quality)
 
                 _, e, rc = run_cmd(mozjpeg_cmd)

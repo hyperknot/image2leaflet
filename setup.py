@@ -9,7 +9,7 @@ requirements = [
 
 setup(
     name='image2leaflet',
-    version='0.1.1',
+    version='0.1.3',
     description='A command line tool for converting big images to Leaflet maps',
     author='Zsolt Ero',
     author_email='zsolt.ero@gmail.com',
