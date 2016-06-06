@@ -1,12 +1,16 @@
 import os
+import sys
 import math
 
 from osgeo import gdal
 from .utils import ensure_dir, get_path_by_list, run_cmd
 
 tilesize = 256
-mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg'])
 
+try:
+    mozjpeg_path = get_path_by_list(None, ['/usr/local/opt/mozjpeg/bin/cjpeg2'])
+except Exception:
+    sys.exit('mozjpeg missing, please install mozjpeg')
 
 
 def gen_tile_path(subfolder, ext, x, y, zoom):
