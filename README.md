@@ -31,7 +31,7 @@ http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-4-mapserve
 1. Install **image2leaflet**:
 
     1. Close and reopen the command line window
-    2. run 
+    2. run: 
         
             pip install image2leaflet
          
@@ -40,13 +40,13 @@ http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-4-mapserve
 
 1. Install dependencies with homebrew
 
-       brew install python
-       brew install gdal
-       brew install mozjpeg
+        brew install python
+        brew install gdal
+        brew install mozjpeg
     
 2. Install image2leaflet
 
-       pip install image2leaflet
+        pip install image2leaflet
  
      
  
