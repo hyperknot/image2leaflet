@@ -57,7 +57,7 @@ From command line, simply run
 
     image2leaflet bigimage.tif
     
-Which will create a tiled Leaflet map in `bigimage` subfolder. 
+Which will create a tiled Leaflet map in `bigimage` subfolder. You can open index.html in the generated folder or check the source is Leaflet configured for that image.
    
 By default the output folder is relative to the image file. You can override it by specifying `-o` or `--output` for example:
 
