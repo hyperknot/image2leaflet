@@ -69,8 +69,8 @@ def process_image(input_file_path, ext='jpg', subfolder=None):
 
 
 def generate_index_html(width, height, ext, title, subfolder):
-    templates_folder = os.path.dirname(os.path.dirname(__file__))
-    template_path = os.path.join(templates_folder, 'templates', 'index.html')
+    templates_folder = os.path.join(os.path.dirname(__file__), 'templates')
+    template_path = os.path.join(templates_folder, 'index.html')
 
     template_str = read_file_contents(template_path)
 

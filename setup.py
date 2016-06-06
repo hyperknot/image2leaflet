@@ -9,13 +9,12 @@ requirements = [
 
 setup(
     name='image2leaflet',
-    version='0.1.3',
+    version='0.1.8',
     description='A command line tool for converting big images to Leaflet maps',
     author='Zsolt Ero',
     author_email='zsolt.ero@gmail.com',
     url='https://github.com/hyperknot/image2leaflet',
     packages=['image2leaflet'],
-    package_dir={'image2leaflet': 'image2leaflet'},
     include_package_data=True,
     install_requires=requirements,
     license='MIT',
