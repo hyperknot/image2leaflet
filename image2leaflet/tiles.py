@@ -29,15 +29,25 @@ def make_zoom_info(width, height):
         coverage = 2 ** zoom * tilesize
         meta_size = 2 ** (max_native_zoom - zoom) * tilesize
 
+        meta_width_float = width / 2.0 ** (max_native_zoom - zoom)
+        meta_height_float = height / 2.0 ** (max_native_zoom - zoom)
+
         zoom_data = {
             'zoom': zoom,
             'coverage': coverage,
             'meta_size': meta_size,
+            'meta_width_float': meta_width_float,
+            'meta_height_float': meta_height_float,
+            'meta_width_crop': int(meta_width_float),
+            'meta_height_crop': int(meta_height_float),
             'tile_x': int(math.ceil(width / float(meta_size))) - 1,
             'tile_y': int(math.ceil(height / float(meta_size))) - 1,
         }
 
         zoom_info.append(zoom_data)
+
+    from pprint import pprint
+    pprint(zoom_info)
 
     return zoom_info
 
@@ -52,28 +62,28 @@ def process_max_level(zoom_info, subfolder, orig_gd, width, height, tilebands, m
     # count = 0
 
     for x in range(tile_count_x):
-        # calculate rx, rxsize
-        rx = x * tilesize
+        # calculate dst_x, dst_width
+        dst_x = x * tilesize
         if x == tile_count_x - 1:
-            rxsize = width % tilesize
+            dst_width = width % tilesize
         else:
-            rxsize = tilesize
+            dst_width = tilesize
 
         for y in range(tile_count_y):
             output_file_name, output_folder_name = gen_tile_path(subfolder, ext, x, y, zoom)
             ensure_dir(output_folder_name)
 
-            # calculate ry, rysize
-            ry = y * tilesize
+            # calculate dst_y, dst_height
+            dst_y = y * tilesize
             if y == tile_count_y - 1:
-                rysize = height % tilesize
+                dst_height = height % tilesize
             else:
-                rysize = tilesize
+                dst_height = tilesize
 
-            dst_gd = mem_drv.Create('', rxsize, rysize, tilebands)
-            data = orig_gd.ReadRaster(rx, ry, rxsize, rysize, rxsize, rysize)
+            dst_gd = mem_drv.Create('', dst_width, dst_height, tilebands)
+            data = orig_gd.ReadRaster(dst_x, dst_y, dst_width, dst_height, dst_width, dst_height)
 
-            dst_gd.WriteRaster(0, 0, rxsize, rysize, data)
+            dst_gd.WriteRaster(0, 0, dst_width, dst_height, data)
             out_drv.CreateCopy(output_file_name, dst_gd, strict=0)
 
             # count += 1
@@ -86,6 +96,9 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
 
     dst_tile_count_x = zoom_info[dst_level]['tile_x'] + 1
     dst_tile_count_y = zoom_info[dst_level]['tile_y'] + 1
+    dst_meta_width_crop = zoom_info[dst_level]['meta_width_crop']
+    dst_meta_height_crop = zoom_info[dst_level]['meta_height_crop']
+
     # dst_tile_count_total = dst_tile_count_x * dst_tile_count_y
 
     src_level = dst_level + 1
@@ -96,12 +109,22 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
     # count = 0
 
     for dst_x in range(dst_tile_count_x):
+        if dst_x == dst_tile_count_x - 1:
+            dst_width = dst_meta_width_crop % tilesize
+        else:
+            dst_width = tilesize
+
         for dst_y in range(dst_tile_count_y):
             output_file_name, output_folder_name = gen_tile_path(subfolder, ext, dst_x, dst_y, dst_zoom)
             ensure_dir(output_folder_name)
 
-            dst_gd_2x = mem_drv.Create('', 2 * tilesize, 2 * tilesize, tilebands)
-            dst_gd_1x = mem_drv.Create('', tilesize, tilesize, tilebands)
+            if dst_y == dst_tile_count_y - 1:
+                dst_height = dst_meta_height_crop % tilesize
+            else:
+                dst_height = tilesize
+
+            dst_gd_1x = mem_drv.Create('', dst_width, dst_height, tilebands)
+            dst_gd_2x = mem_drv.Create('', 2 * dst_width, 2 * dst_height, tilebands)
 
             # read lower levels
             for plus_x in range(2):
@@ -115,12 +138,12 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
                         continue
 
                     src_file_path, _ = gen_tile_path(subfolder, ext, src_x, src_y, src_zoom)
-
                     src_gd = gdal.Open(src_file_path, gdal.GA_ReadOnly)
-                    data = src_gd.ReadRaster(0, 0, tilesize, tilesize)
+
+                    data = src_gd.ReadRaster(0, 0, src_gd.RasterXSize, src_gd.RasterYSize)
                     dst_gd_2x.WriteRaster(plus_x * tilesize,
                                           plus_y * tilesize,
-                                          tilesize, tilesize,
+                                          src_gd.RasterXSize, src_gd.RasterYSize,
                                           data)
 
             # resample image
