@@ -33,7 +33,7 @@ http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-4-mapserve
 1. Install **image2leaflet**:
 
     1. Close and reopen the command line window
-    2. run 
+    2. run: 
         
             pip install image2leaflet
          
@@ -42,13 +42,13 @@ http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-4-mapserve
 
 1. Install dependencies with homebrew
 
-       brew install python
-       brew install gdal
-       brew install mozjpeg
+        brew install python
+        brew install gdal
+        brew install mozjpeg
     
 2. Install image2leaflet
 
-       pip install image2leaflet
+        pip install image2leaflet
  
      
  
@@ -59,11 +59,11 @@ From command line, simply run
 
     image2leaflet bigimage.tif
     
-Which will create a tiled Leaflet map in `bigimage` subfolder. 
+Which will create a tiled Leaflet map in `bigimage` subfolder. You can open index.html in the generated folder or check the source is Leaflet configured for that image.
    
-By default the output folder is relative to the image file. You can override it by specifying `-o` our `--output` for example:
+By default the output folder is relative to the image file. You can override it by specifying `-o` or `--output` for example:
 
-    image2leaflet bigimage.tif -o my-new-subfolder
+    image2leaflet bigimage.tif -o new-subfolder
     
 The exported format can be either in JPEG (default) or PNG. You can select it using `-f` or `--format` switch.
 
