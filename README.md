@@ -2,6 +2,8 @@
 
 A command line tool for converting (big) images to Leaflet maps. Works with _huge_ images, even with ones bigger than available memory.
 
+Algorithm based on the reference implementaion [gdal2tiles-leaflet](https://github.com/commenthol/gdal2tiles-leaflet).
+
 
 # Installation
 

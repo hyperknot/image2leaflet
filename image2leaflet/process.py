@@ -36,14 +36,14 @@ def process_image(input_file_path, ext='jpg', subfolder=None):
     if not out_drv or not mem_drv:
         raise ValueError('Driver not found')
 
-    gd_orig = gdal.Open(input_file_path, gdal.GA_ReadOnly)
+    orig_gd = gdal.Open(input_file_path, gdal.GA_ReadOnly)
 
-    if not gd_orig:
+    if not orig_gd:
         raise ValueError('Cannot open input file')
 
-    width = gd_orig.RasterXSize
-    height = gd_orig.RasterYSize
-    tilebands = gd_orig.RasterCount
+    width = orig_gd.RasterXSize
+    height = orig_gd.RasterYSize
+    tilebands = orig_gd.RasterCount
 
     print('Input file: {}x{} pixels, {} bands'.format(width, height, tilebands))
 
@@ -52,7 +52,7 @@ def process_image(input_file_path, ext='jpg', subfolder=None):
     delete_dir(subfolder)
 
     print('Generating zoom level: {}'.format(zoom_info[-1]['zoom']))
-    process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, mem_drv, out_drv, out_drv_str.lower())
+    process_max_level(zoom_info, subfolder, orig_gd, width, height, tilebands, mem_drv, out_drv, out_drv_str.lower())
 
     for dst_level in range(len(zoom_info) - 2, -1, -1):
         print('Generating zoom level: {}'.format(dst_level))

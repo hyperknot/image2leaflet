@@ -42,7 +42,7 @@ def make_zoom_info(width, height):
     return zoom_info
 
 
-def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, mem_drv, out_drv, ext):
+def process_max_level(zoom_info, subfolder, orig_gd, width, height, tilebands, mem_drv, out_drv, ext):
     level = -1
     zoom = zoom_info[level]['zoom']
     tile_count_x = zoom_info[level]['tile_x'] + 1
@@ -70,11 +70,11 @@ def process_max_level(zoom_info, subfolder, gd_orig, width, height, tilebands, m
             else:
                 rysize = tilesize
 
-            dstile = mem_drv.Create('', tilesize, tilesize, tilebands)
-            data = gd_orig.ReadRaster(rx, ry, rxsize, rysize, rxsize, rysize)
+            dst_gd = mem_drv.Create('', rxsize, rysize, tilebands)
+            data = orig_gd.ReadRaster(rx, ry, rxsize, rysize, rxsize, rysize)
 
-            dstile.WriteRaster(0, 0, rxsize, rysize, data)
-            out_drv.CreateCopy(output_file_name, dstile, strict=0)
+            dst_gd.WriteRaster(0, 0, rxsize, rysize, data)
+            out_drv.CreateCopy(output_file_name, dst_gd, strict=0)
 
             # count += 1
             # print count, tile_count_total
@@ -100,8 +100,8 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
             output_file_name, output_folder_name = gen_tile_path(subfolder, ext, dst_x, dst_y, dst_zoom)
             ensure_dir(output_folder_name)
 
-            dsquery = mem_drv.Create('', 2 * tilesize, 2 * tilesize, tilebands)
-            dstile = mem_drv.Create('', tilesize, tilesize, tilebands)
+            dst_gd_2x = mem_drv.Create('', 2 * tilesize, 2 * tilesize, tilebands)
+            dst_gd_1x = mem_drv.Create('', tilesize, tilesize, tilebands)
 
             # read lower levels
             for plus_x in range(2):
@@ -116,17 +116,20 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
 
                     src_file_path, _ = gen_tile_path(subfolder, ext, src_x, src_y, src_zoom)
 
-                    dsquerytile = gdal.Open(src_file_path, gdal.GA_ReadOnly)
-                    dsquery.WriteRaster(plus_x * tilesize, plus_y * tilesize, tilesize, tilesize,
-                                        dsquerytile.ReadRaster(0, 0, tilesize, tilesize))
+                    src_gd = gdal.Open(src_file_path, gdal.GA_ReadOnly)
+                    data = src_gd.ReadRaster(0, 0, tilesize, tilesize)
+                    dst_gd_2x.WriteRaster(plus_x * tilesize,
+                                          plus_y * tilesize,
+                                          tilesize, tilesize,
+                                          data)
 
             # resample image
-            dsquery.SetGeoTransform((0.0, 0.5, 0.0, 0.0, 0.0, 0.5))
-            dstile.SetGeoTransform((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
-            res = gdal.ReprojectImage(dsquery, dstile, None, None, gdal.GRA_Lanczos)
+            dst_gd_2x.SetGeoTransform((0.0, 0.5, 0.0, 0.0, 0.0, 0.5))
+            dst_gd_1x.SetGeoTransform((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
+            res = gdal.ReprojectImage(dst_gd_2x, dst_gd_1x, None, None, gdal.GRA_Lanczos)
             assert res == 0
 
-            out_drv.CreateCopy(output_file_name, dstile, strict=0)
+            out_drv.CreateCopy(output_file_name, dst_gd_1x, strict=0)
 
             if ext == 'png':
                 os.remove(output_file_name + '.aux.xml')
