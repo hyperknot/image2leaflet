@@ -46,8 +46,8 @@ def make_zoom_info(width, height):
 
         zoom_info.append(zoom_data)
 
-    from pprint import pprint
-    pprint(zoom_info)
+    # from pprint import pprint
+    # pprint(zoom_info)
 
     return zoom_info
 
@@ -137,13 +137,17 @@ def process_lower_levels(dst_level, zoom_info, subfolder, tilebands, mem_drv, ou
                     if src_y >= src_tile_count_y:
                         continue
 
+
                     src_file_path, _ = gen_tile_path(subfolder, ext, src_x, src_y, src_zoom)
                     src_gd = gdal.Open(src_file_path, gdal.GA_ReadOnly)
 
-                    data = src_gd.ReadRaster(0, 0, src_gd.RasterXSize, src_gd.RasterYSize)
+                    src_width = (src_gd.RasterXSize // 2) * 2
+                    src_height = (src_gd.RasterYSize // 2) * 2
+
+                    data = src_gd.ReadRaster(0, 0, src_width, src_height)
                     dst_gd_2x.WriteRaster(plus_x * tilesize,
                                           plus_y * tilesize,
-                                          src_gd.RasterXSize, src_gd.RasterYSize,
+                                          src_width, src_height,
                                           data)
 
             # resample image
